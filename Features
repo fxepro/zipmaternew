@@ -1,0 +1,167 @@
+# Zipmater — Feature Tracker
+
+Zipmater is the gig-worker delivery platform: medical couriers, same-day and last-mile drivers,
+food and grocery delivery, white glove, furniture and moving help. It was hard-forked from Shipmater
+(which stays focused on trucking — companies, dispatchers, CDL drivers).
+
+Terminology: in the UI, **Client** = the person or business sending (`shipper` in code/DB) and
+**Courier** = the gig worker (`carrier` in code/DB). Model, table, route and role names were kept
+as-is to avoid a risky migration rewrite.
+
+Legend: ✅ Done  🔲 To Do  🚧 In Progress
+
+---
+
+## Split from Shipmater
+
+- ✅ Rebrand Shipmater → Zipmater across code, config, emails, domains
+- ✅ Service types trimmed to gig work
+  - Removed: Freight & Logistics (dry van, flatbed, reefer, hotshot, hazmat), Construction & Equipment,
+    open/enclosed auto transport, RV/boat
+  - Kept: Medical & Pharma, Auto parts / motorcycle, Art & specialty, Food & beverage, Household, Local & last mile
+  - No service type requires DOT, MC, CDL, or HazMat any more
+- ✅ Certifications: removed the DOT & Federal Compliance group (DOT medical, drug & alcohol program,
+  FMCSA cargo securement, ELD, DOT hazmat) and load securement
+- ✅ Removed FMCSA DOT/MC live lookup (`FmcsaService`, routes, config)
+- ✅ Removed FMCSA Drug & Alcohol Clearinghouse (`ClearinghouseService`, controller, webhook, config)
+- ✅ Courier profile: removed Commercial (CDL/DOT/MC/endorsements) and DOT Medical tabs; the driver's
+  license on the Personal tab is what Checkr's MVR check uses
+- ✅ Vehicle types: car, SUV, pickup, cargo van, box truck, refrigerated van, bike, scooter
+- ✅ Job quote presets: standard delivery, temperature controlled, medical, furniture & appliances, rush / same-day
+- ✅ Contract vehicle types replace trucking equipment types (dry van, flatbed, step deck, LTL)
+- ✅ Preferred couriers are added by email (was: by DOT number)
+- ✅ PDF documents adapted: Delivery Receipt (was BOL), Job Confirmation (was Rate Confirmation),
+  Courier Agreement (was Carrier Agreement); MC#/DOT# removed
+- ✅ Marketing site rewritten for gig work; International section (global, USMCA, coverage,
+  international carriers) and freight / construction / auto-transport use cases removed;
+  new use cases: Same-Day & Last Mile, Household & Moving
+- 🔲 **Legal review** of rewritten agreement / confirmation / receipt clauses and Terms / Privacy copy
+- 🔲 Re-seed `service_types` and `certifications` on existing databases (seeders wipe and recreate;
+  check courier ↔ service type links first)
+- 🔲 Drop unused trucking columns (`dot_number`, `mc_number`, `usdot_number`, `cdl_*`, `hazmat_*`,
+  `clearinghouse_*`, `fmcsa`-type verifications) once nothing reads them
+- 🔲 Remove `requires_dot` / `requires_mc` / `requires_cdl` / `requires_hazmat` from `service_types`
+  and the badges in `ServiceTypeSelector`
+
+---
+
+## Core Platform
+
+### Client (sender)
+- ✅ Dashboard (stats, activity feed, quick actions)
+- ✅ Job creation (contracted — stops, items, route optimisation)
+- ✅ Open market jobs (post, bid management)
+- ✅ Bid review & acceptance
+- ✅ Contract management (create, view, archive)
+- ✅ Preferred couriers list (add by email)
+- ✅ Location address book
+- ✅ Client profile (business identity, registered/ops address, EIN, compliance docs)
+- ✅ Payment methods (Stripe card)
+- ✅ ACH bank connection (Plaid)
+- ✅ Transaction history
+- ✅ Organisation / team management (invite, roles, switch org)
+- ✅ Client ratings & reviews
+
+### Courier
+- ✅ Dashboard (active jobs, earnings, pending offers)
+- ✅ Open market job board (browse, filter, bid)
+- ✅ Contracted job management (my jobs, stop progression)
+- ✅ My offers (track submitted bids across all jobs)
+- ✅ Courier profile (personal + driver's license, services, certifications, insurance, vehicles)
+- ✅ Vehicle management (add/edit/remove)
+- ✅ Document uploads (license, insurance, certifications)
+- ✅ Background check + driving record (Checkr)
+- ✅ Certifications (HIPAA, bloodborne pathogens, chain of custody, ServSafe, white glove, etc.)
+- ✅ Stripe Connect onboarding (payout setup)
+- ✅ Earnings & payout request
+- ✅ Real-time GPS stop progression (en route → arrived → complete)
+- ✅ Courier ratings & reviews
+
+### Admin (Zipmater platform)
+- ✅ Metrics dashboard (revenue, jobs, users, disputes)
+- ✅ Shipments oversight
+- ✅ User management
+- ✅ Disputes overview
+- ✅ Courier approval queue (identity, age, fee, background)
+- ✅ Organisation management (list, view, Stripe mode toggle)
+- ✅ White-label tenant provisioning (create, update)
+- ✅ Platform leads (convert to tenant)
+- ✅ Blog management (create, edit, delete)
+- ✅ Financial reporting / settlement exports
+
+---
+
+## White-Label Multi-Tenancy
+
+- ✅ PlatformTenant model (brand, domain, DBA, mail, feature flags)
+- ✅ Self-service branding page — 4 tabs (Brand, Domain, Email, Settings)
+- ✅ Middleware tenant resolution (`middleware.ts`)
+- ✅ `lib/tenant.ts` utility (server + client config, apply/reset branding)
+- ✅ Dynamic browser title + favicon
+- ✅ Branded login & register pages
+- ✅ Sidebar + dashboard branding from cookie
+- ✅ Per-tenant email at runtime (`TenantMailerService` — SMTP, Postmark, SendGrid, Mailgun, SES)
+- 🔲 Stripe Connect — tenant as merchant of record
+- 🔲 SSO (SAML / OIDC) — flag exists, not implemented
+
+---
+
+## Documents (PDF)
+
+- ✅ `DocumentService` — tenant-branded PDF generation (DomPDF)
+- ✅ **Job Confirmation** — per job (`GET /api/v1/jobs/{job}/rate-confirmation`)
+- ✅ **Courier Agreement** — per contract (`GET /api/v1/contracts/{contract}/agreement`)
+- ✅ **Delivery Receipt** — per job at dispatch (`GET /api/v1/jobs/{job}/bol`)
+- ✅ **Proof of Pickup / Proof of Delivery** — per stop, photos + drawn signature
+- ✅ **Invoice / Settlement Statement** — auto-numbered, payment status, remittance instructions
+
+---
+
+## Tracking & GPS
+
+- ✅ Real-time GPS pings (courier phone-based, per stop)
+- ✅ Public tracking page (token-based, no login)
+- ✅ Route map visualisation (MapTiler + stop overlay)
+
+---
+
+## Compliance & Identity
+
+- ✅ Stripe Identity — government ID + selfie + liveness; verified DOB sets `age_verified`
+- ✅ Admin approval hard-blocked until identity is verified
+- ✅ Checkr background check (criminal, MVR, sex offender registry, OFAC)
+- ✅ Courier document uploads (license, COI, certifications)
+- ✅ International address & identity fields (country-aware address, phone, national ID, tax ID)
+
+---
+
+## Ratings & Reviews
+
+- ✅ Bidirectional post-job ratings (overall, communication, reliability, comment)
+- ✅ Public paginated reviews per org; profile averages recalculated on each rating
+
+---
+
+## Payments
+
+- ✅ Stripe card payments (client → platform)
+- ✅ Plaid ACH bank connection
+- ✅ Stripe Connect courier payouts
+- ✅ Admin Stripe mode toggle (single account vs. Connect per org)
+- ✅ Platform fee (commission rate per org)
+- ✅ Currency field on orgs, jobs, shipments
+
+---
+
+## Marketing / Public
+
+- ✅ Blog (public list + post, admin CRUD)
+- ✅ Platform lead capture form (`/platform`)
+- ✅ Pricing page (`/pricing`)
+- ✅ Courier landing page (`/carriers`) — gig earnings table, requirements, FAQ
+- ✅ Courier Trust & Safety (`/carrier-trust`) — ID + selfie, driving record, background, insurance & credentials, human review
+- ✅ Client trust page (`/shippers/trust`)
+- ✅ Use cases: Same-Day & Last Mile, Medical, Household & Moving, Art & Antiques, Food & Beverage
+- ✅ Industries: Healthcare & Pharma, Food & Beverage, Retail & E-Commerce, Government, Arts & Specialty
+- ✅ Navigation: How It Works, Use Cases, Industries, Clients, Couriers, Pricing, Blog
+- 🔲 Public URLs still say `/shippers` and `/carriers` — consider `/clients` and `/couriers` with redirects

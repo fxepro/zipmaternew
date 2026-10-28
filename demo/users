@@ -1,0 +1,11 @@
+Zipmater — demo users (local database: zipmaternew)
+Seeded by api/database/seeders/DatabaseSeeder.php. Local development only.
+
+Role (UI)   Role (DB)   Name            Email              Password   Organization
+---------   ---------   -------------   ----------------   --------   ----------------------
+Client      shipper     Alex Morgan     alex@demo.com      password   Alex Morgan's Client
+Courier     carrier     Jordan Reyes    jordan@demo.com    password   Jordan Reyes' Courier
+Courier     carrier     Casey Rivera    casey@demo.com     password   Casey Rivera's Courier
+Courier     carrier     Marcus Webb     marcus@demo.com    password   Marcus Webb's Courier
+Receiver    receiver    Sam Chen        sam@demo.com       password   —
+Admin       admin       Admin User      admin@demo.com     password   —

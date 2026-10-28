@@ -1,0 +1,350 @@
+import axios from 'axios';
+
+/**
+ * Production browser: same-origin /api/* (proxied by app/api/[...path]).
+ * Local dev: http://127.0.0.1:8888 (matches `npm run dev:api`).
+ * Override with NEXT_PUBLIC_API_URL in .env.local.
+ */
+function resolveApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    const isLocal =
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host.startsWith('192.168.');
+    if (!isLocal) return '';
+  }
+
+  if (process.env.NEXT_PUBLIC_API_PROXY === 'true') return '';
+
+  return (
+    process.env.API_PROXY_URL ??
+    process.env.NEXT_PUBLIC_API_URL ??
+    'http://127.0.0.1:8888'
+  );
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
+
+export const api = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: false,
+  headers: {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+  },
+});
+
+// ── Bearer-token helpers ──────────────────────────────────────────────
+const TOKEN_KEY = 'sm_token';
+
+export function getStoredToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setStoredToken(token: string): void {
+  if (typeof window !== 'undefined' && token && token !== 'undefined' && token !== 'null') {
+    localStorage.setItem(TOKEN_KEY, token);
+  }
+}
+
+export function clearStoredToken(): void {
+  if (typeof window !== 'undefined') localStorage.removeItem(TOKEN_KEY);
+}
+
+
+// ── Request interceptor: attach token on every request ────────────────
+api.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (token && token !== 'undefined' && token !== 'null') {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
+
+// ── Response interceptor: pass errors through ────────────────────────
+// Do NOT auto-redirect on 401 here — getUser() already handles that.
+// A global redirect would break demo mode and cause redirect loops.
+api.interceptors.response.use(
+  (res) => res,
+  (err) => Promise.reject(err)
+);
+
+// ── Auth ──────────────────────────────────────────────────────────────
+export const authApi = {
+  login:    (data: { email: string; password: string }) => api.post('/api/v1/auth/login', data),
+  logout:   () => api.post('/api/v1/auth/logout'),
+  register: (data: Record<string, unknown>) => api.post('/api/v1/auth/register', data),
+  me:       () => api.get('/api/v1/user'),
+  verifyEmail: (token: string) => api.post('/api/v1/auth/email/verify', { token }),
+};
+
+// ── Marketing / white-label leads (public) ────────────────────────────
+export const marketingApi = {
+  submitLead: (data: Record<string, unknown>) => api.post('/api/v1/platform-leads', data),
+};
+
+// ── Shipments ─────────────────────────────────────────────────────────
+export const shipmentApi = {
+  list:          (params?: Record<string, unknown>) => api.get('/api/v1/shipments', { params }),
+  get:           (id: number) => api.get(`/api/v1/shipments/${id}`),
+  create:        (data: Record<string, unknown>) => api.post('/api/v1/shipments', data),
+  getBids:       (id: number) => api.get(`/api/v1/shipments/${id}/bids`),
+  ping:          (id: number, data: { lat: number; lng: number; speed?: number | null }) => api.post(`/api/v1/shipments/${id}/ping`, data),
+  acceptOffer:   (id: number) => api.put(`/api/v1/shipments/${id}/accept-offer`),
+  declineOffer:  (id: number) => api.put(`/api/v1/shipments/${id}/decline-offer`),
+  start:         (id: number) => api.put(`/api/v1/shipments/${id}/start`),
+  deliver:       (id: number, data?: { delivery_photo_url?: string; delivery_notes?: string }) =>
+                   api.post(`/api/v1/shipments/${id}/deliver`, data ?? {}),
+};
+
+// ── Bids ──────────────────────────────────────────────────────────────
+export const bidApi = {
+  place:         (shipmentId: number, data: Record<string, unknown>) => api.post(`/api/v1/shipments/${shipmentId}/bids`, data),
+  /** Step 1: create PaymentIntent for bid amount (returns client_secret) */
+  paymentIntent: (bidId: number) => api.post(`/api/v1/bids/${bidId}/payment-intent`),
+  /** Step 2: confirm bid acceptance after Stripe authorization */
+  accept:        (bidId: number, paymentIntentId: string) =>
+                   api.put(`/api/v1/bids/${bidId}/accept`, { payment_intent_id: paymentIntentId }),
+  withdraw:      (bidId: number) => api.put(`/api/v1/bids/${bidId}/withdraw`),
+  carrierOffers: (params?: Record<string, unknown>) => api.get('/api/v1/carrier/offers', { params }),
+};
+
+// ── Freight payments (shipper) ────────────────────────────────────────
+export const freightPaymentApi = {
+  /** Pay a contracted / direct-offer shipment (agreed_cost already set) */
+  payShipment: (shipmentId: number) => api.post(`/api/v1/shipper/pay/${shipmentId}`),
+};
+
+// ── Plaid / ACH bank connection (shipper) ─────────────────────────────
+export const plaidApi = {
+  linkToken:   () => api.get('/api/v1/shipper/plaid/link-token'),
+  exchange:    (data: { public_token: string; account_id: string; institution_name?: string }) =>
+                 api.post('/api/v1/shipper/plaid/exchange', data),
+  status:      () => api.get('/api/v1/shipper/plaid/status'),
+  disconnect:  () => api.delete('/api/v1/shipper/plaid/disconnect'),
+};
+
+// ── Jobs (carrier) ────────────────────────────────────────────────────
+export const jobApi = {
+  list:      (params?: Record<string, unknown>) => api.get('/api/v1/jobs', { params }),
+  available: (type: 'open' | 'contracted' = 'open', myServices = false) =>
+               api.get('/api/v1/jobs', { params: { type, ...(myServices && { my_services: 1 }) } }),
+};
+
+// ── Carrier ───────────────────────────────────────────────────────────
+export const carrierApi = {
+  earnings: () => api.get('/api/v1/carrier/earnings'),
+  list:     (params?: Record<string, unknown>) => api.get('/api/v1/carriers', { params }),
+  lookup:   (email: string) => api.get('/api/v1/carriers', { params: { email } }),
+};
+
+// ── Tracking (public) ─────────────────────────────────────────────────
+export const trackApi = {
+  get:     (token: string) => api.get(`/api/v1/track/${token}`),
+  confirm: (token: string) => api.post(`/api/v1/track/${token}`),
+};
+
+// ── Payment methods ───────────────────────────────────────────────────
+export const paymentApi = {
+  list:       () => api.get('/api/v1/payment-methods'),
+  create:     (data: Record<string, unknown>) => api.post('/api/v1/payment-methods', data),
+  destroy:    (id: number) => api.delete(`/api/v1/payment-methods/${id}`),
+  setDefault: (id: number) => api.post(`/api/v1/payment-methods/${id}/default`),
+};
+
+// ── Transactions (shipper payment history) ────────────────────────────
+export const transactionApi = {
+  list: (params?: Record<string, unknown>) => api.get('/api/v1/transactions', { params }),
+};
+
+// ── Preferred carriers ────────────────────────────────────────────────
+export const preferredCarrierApi = {
+  list:   () => api.get('/api/v1/preferred-carriers'),
+  add:    (data: Record<string, unknown>) => api.post('/api/v1/preferred-carriers', data),
+  remove: (id: number) => api.delete(`/api/v1/preferred-carriers/${id}`),
+};
+
+// ── Contracts ─────────────────────────────────────────────────────────
+export const contractApi = {
+  list:    (params?: Record<string, unknown>) => api.get('/api/v1/contracts', { params }),
+  create:  (data: Record<string, unknown>) => api.post('/api/v1/contracts', data),
+  update:  (id: number, data: Record<string, unknown>) => api.put(`/api/v1/contracts/${id}`, data),
+  destroy: (id: number) => api.delete(`/api/v1/contracts/${id}`),
+};
+
+// ── Locations address book ────────────────────────────────────────────
+export const locationApi = {
+  list:    (params?: Record<string, unknown>) => api.get('/api/v1/locations', { params }),
+  create:  (data: Record<string, unknown>)    => api.post('/api/v1/locations', data),
+  update:  (id: number, data: Record<string, unknown>) => api.put(`/api/v1/locations/${id}`, data),
+  destroy: (id: number)                       => api.delete(`/api/v1/locations/${id}`),
+};
+
+// ── Freight jobs (contracted) ─────────────────────────────────────────
+export const freightJobApi = {
+  // Shipper
+  shipperList: (params?: Record<string, unknown>) => api.get('/api/v1/shipper/freight-jobs', { params }),
+  create:      (data: Record<string, unknown>)    => api.post('/api/v1/shipper/freight-jobs', data),
+  get:         (id: number)                       => api.get(`/api/v1/shipper/freight-jobs/${id}`),
+  optimise:    (id: number)                       => api.post(`/api/v1/shipper/freight-jobs/${id}/optimise`),
+  saveBilling: (id: number, data: Record<string, unknown>) => api.patch(`/api/v1/shipper/freight-jobs/${id}/billing`, data),
+  post:        (id: number)                       => api.post(`/api/v1/shipper/freight-jobs/${id}/post`),
+  /** PDF docs — must use blob + Bearer (plain <a> links return JSON 401). */
+  rateConfirmation: (id: number) =>
+    api.get(`/api/v1/jobs/${id}/rate-confirmation`, { responseType: 'blob', headers: { Accept: 'application/pdf' } }),
+  bol: (id: number) =>
+    api.get(`/api/v1/jobs/${id}/bol`, { responseType: 'blob', headers: { Accept: 'application/pdf' } }),
+  invoice: (id: number) =>
+    api.get(`/api/v1/jobs/${id}/invoice`, { responseType: 'blob', headers: { Accept: 'application/pdf' } }),
+  // Carrier
+  carrierList: (params?: Record<string, unknown>) => api.get('/api/v1/carrier/freight-jobs', { params }),
+  carrierGet:  (id: number)                       => api.get(`/api/v1/carrier/freight-jobs/${id}`),
+  updateStop:  (jobId: number, stopId: number, data: Record<string, unknown>) =>
+                 api.patch(`/api/v1/carrier/freight-jobs/${jobId}/stops/${stopId}`, data),
+  // Offers — carrier
+  submitOffer:   (jobId: number, data: { amount: number; note?: string }) =>
+                   api.post(`/api/v1/carrier/freight-jobs/${jobId}/offers`, data),
+  withdrawOffer: (jobId: number, offerId: number) =>
+                   api.delete(`/api/v1/carrier/freight-jobs/${jobId}/offers/${offerId}`),
+  // Offers — shipper (all jobs)
+  shipperAllOffers: (params?: Record<string, unknown>) =>
+                   api.get('/api/v1/shipper/offers', { params }),
+  // Offers — shipper (per job)
+  listOffers:    (jobId: number) =>
+                   api.get(`/api/v1/shipper/freight-jobs/${jobId}/offers`),
+  acceptOffer:   (jobId: number, offerId: number) =>
+                   api.post(`/api/v1/shipper/freight-jobs/${jobId}/offers/${offerId}/accept`),
+  declineOffer:  (jobId: number, offerId: number) =>
+                   api.post(`/api/v1/shipper/freight-jobs/${jobId}/offers/${offerId}/decline`),
+  // Offer terms — shipper saves quote requirements on open job
+  saveTerms:     (jobId: number, data: { quote_requirements: Record<string, unknown> }) =>
+                   api.patch(`/api/v1/shipper/freight-jobs/${jobId}/terms`, data),
+  // Carrier: all my offers across all jobs
+  carrierMyOffers: (params?: Record<string, unknown>) =>
+                   api.get('/api/v1/carrier/my-offers', { params }),
+
+  // Evidence (photos) per stop
+  listEvidence:    (jobId: number, stopId: number) =>
+                     api.get(`/api/v1/jobs/${jobId}/stops/${stopId}/evidence`),
+  uploadEvidence:  (jobId: number, stopId: number, formData: FormData) =>
+                     api.post(`/api/v1/jobs/${jobId}/stops/${stopId}/evidence`, formData, {
+                       headers: { 'Content-Type': 'multipart/form-data' },
+                     }),
+  deleteEvidence:  (jobId: number, evidenceId: number) =>
+                     api.delete(`/api/v1/jobs/${jobId}/evidence/${evidenceId}`),
+  saveSignature:   (jobId: number, stopId: number, data: { signature_data: string; signature_name: string }) =>
+                     api.post(`/api/v1/jobs/${jobId}/stops/${stopId}/signature`, data),
+  generatePod:     (jobId: number, stopId: number) =>
+                     api.post(`/api/v1/jobs/${jobId}/stops/${stopId}/pod`),
+};
+
+// ── KYC / Identity ─────────────────────────────────────────────────────
+export const kycApi = {
+  status:               () => api.get('/api/v1/carrier/kyc-status'),
+  startIdentitySession: () => api.post('/api/v1/stripe/identity/session'),
+};
+
+// ── Blog ───────────────────────────────────────────────────────────────
+export const blogApi = {
+  list:    (params?: Record<string, unknown>)                        => api.get('/api/v1/blog', { params }),
+  get:     (slug: string)                                            => api.get(`/api/v1/blog/${slug}`),
+  adminList: (params?: Record<string, unknown>)                      => api.get('/api/v1/admin/blog', { params }),
+  create:  (data: Record<string, unknown>)                           => api.post('/api/v1/admin/blog', data),
+  update:  (id: number, data: Record<string, unknown>)               => api.put(`/api/v1/admin/blog/${id}`, data),
+  destroy: (id: number)                                              => api.delete(`/api/v1/admin/blog/${id}`),
+};
+
+// ── Service Types ──────────────────────────────────────────────────────
+export const serviceTypeApi = {
+  list:  () => api.get('/api/v1/service-types'),
+  rules: (keys: string[]) => api.get('/api/v1/service-types/rules', { params: { types: keys } }),
+};
+
+// ── Certifications ─────────────────────────────────────────────────────
+export const certificationApi = {
+  list: () => api.get('/api/v1/certifications'),
+  sync: (keys: string[]) => api.put('/api/v1/carrier/certifications', { certification_keys: keys }),
+};
+
+// ── Org / Team ──────────────────────────────────────────────────────────
+export const orgApi = {
+  get:               ()                                         => api.get('/api/v1/org'),
+  update:            (data: Record<string, unknown>)            => api.put('/api/v1/org', data),
+  members:           ()                                         => api.get('/api/v1/org/members'),
+  updateMember:      (id: number, role: string)                 => api.put(`/api/v1/org/members/${id}`, { role }),
+  removeMember:      (id: number)                               => api.delete(`/api/v1/org/members/${id}`),
+  invitations:       ()                                         => api.get('/api/v1/org/invitations'),
+  invite:            (email: string, role: string)              => api.post('/api/v1/org/invitations', { email, role }),
+  acceptInvitation:  (token: string)                            => api.post('/api/v1/org/invitations/accept', { token }),
+  cancelInvitation:  (id: number)                               => api.delete(`/api/v1/org/invitations/${id}`),
+  switchOrg:         (orgId: number)                            => api.put('/api/v1/org/switch', { org_id: orgId }),
+  myOrganizations:   ()                                         => api.get('/api/v1/user/organizations'),
+};
+
+// ── Admin: org management + Stripe toggle ─────────────────────────────
+export const adminOrgApi = {
+  listOrgs:    (params?: Record<string, unknown>)  => api.get('/api/v1/admin/orgs', { params }),
+  getOrg:      (id: number)                        => api.get(`/api/v1/admin/orgs/${id}`),
+  /** The pivotal toggle: flip an org between Zipmater's Stripe and their own. */
+  updateStripe: (id: number, data: {
+    stripe_mode: 'platform' | 'connect';
+    stripe_connect_id?: string | null;
+    commission_rate?: number | null;
+  })                                               => api.put(`/api/v1/admin/orgs/${id}/stripe`, data),
+
+  // Platform tenant management
+  listTenants:   (params?: Record<string, unknown>) => api.get('/api/v1/admin/platform-tenants', { params }),
+  createTenant:  (data: Record<string, unknown>)    => api.post('/api/v1/admin/platform-tenants', data),
+  updateTenant:  (id: number, data: Record<string, unknown>) => api.put(`/api/v1/admin/platform-tenants/${id}`, data),
+  convertLead:   (leadId: number, data: Record<string, unknown>) => api.post(`/api/v1/admin/leads/${leadId}/convert`, data),
+};
+
+// ── Profile (shipper + carrier) ────────────────────────────────────────
+export const profileApi = {
+  getShipper:    () => api.get('/api/v1/shipper/profile'),
+  updateShipper: (data: Record<string, unknown>) => api.put('/api/v1/shipper/profile', data),
+  getCarrier:    () => api.get('/api/v1/carrier/profile'),
+  updateCarrier: (data: Record<string, unknown>) => api.put('/api/v1/carrier/profile', data),
+};
+
+export const shipperVerificationApi = {
+  resendEmail:     () => api.post('/api/v1/shipper/verify/email/resend'),
+  sendPhoneCode:   (phone?: string) => api.post('/api/v1/shipper/verify/phone/send', phone ? { phone } : {}),
+  confirmPhoneCode:(code: string) => api.post('/api/v1/shipper/verify/phone/confirm', { code }),
+  listDocuments:   () => api.get('/api/v1/shipper/documents'),
+  uploadDocument:  (form: FormData) => api.post('/api/v1/shipper/documents', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  submitBusiness:  () => api.post('/api/v1/shipper/verify/business/submit'),
+  adminPending:    () => api.get('/api/v1/admin/shippers/pending-review'),
+  adminReview:     (id: number, action: 'approve' | 'reject', notes?: string) =>
+    api.post(`/api/v1/admin/shippers/${id}/review`, { action, notes }),
+};
+
+// ── Ratings ────────────────────────────────────────────────────────────────
+export const ratingApi = {
+  create:      (jobId: number, data: object) => api.post(`/api/v1/jobs/${jobId}/ratings`, data),
+  jobRatings:  (jobId: number) => api.get(`/api/v1/jobs/${jobId}/ratings`),
+  orgRatings:  (orgId: number, page = 1) => api.get(`/api/v1/orgs/${orgId}/ratings?page=${page}`),
+};
+
+// ── Carrier Verification (Stripe Identity + Checkr) ─────────────
+export const verificationApi = {
+  list:                  () => api.get('/api/v1/carrier/verifications'),
+  identitySession:       () => api.post('/api/v1/stripe/identity/session'),
+  initiateBackgroundCheck: () => api.post('/api/v1/carrier/background-check'),
+  onboardingFee:           () => api.post('/api/v1/stripe/onboarding-fee'),
+};
+
+// ── Admin: financial reporting ─────────────────────────────────────────
+export const adminFinancialsApi = {
+  get:    (params: Record<string, string>) => api.get('/api/v1/admin/financials', { params }),
+  export: (params: Record<string, string>) => {
+    const qs = new URLSearchParams(params).toString();
+    window.location.href = `/api/v1/admin/financials/export?${qs}`;
+  },
+};

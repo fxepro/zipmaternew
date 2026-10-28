@@ -1,0 +1,384 @@
+/* Source Sans 3 (body) + Jost (headings) via next/font — see app/layout.tsx */
+@import "tailwindcss";
+
+/* ============================================================================
+   ZIPMATER — DASHBOARD DESIGN SYSTEM
+   Primary-blue sidebar · navy actions · airy surface neutrals.
+   Type: Source Sans 3 body/UI · Jost display/headings.
+   ============================================================================ */
+:root {
+  /* ── Brand ──────────────────────────────────────────────────────────────── */
+  --primary:        #0096C7;   /* primary blue — sidebar, accents            */
+  --primary-hover:  #0086B3;
+  --primary-soft:   #E0F4FA;   /* tinted icon / badge backgrounds            */
+  --navy:           #0A2E40;   /* actions, active nav, headings, links       */
+  --navy-hover:     #08222F;
+  --info:           #039BE5;   /* info + hover highlight                      */
+
+  /* ── Surfaces ───────────────────────────────────────────────────────────── */
+  --bg:             #F0F4F7;   /* app background                             */
+  --card:           #FFFFFF;
+  --surface:        #F7FAFB;   /* subtle alternate fill                      */
+  --border:         #E2ECF0;
+  --border-strong:  #CFDDE5;
+
+  /* ── Text ───────────────────────────────────────────────────────────────── */
+  --text:           #0F2433;
+  --text-muted:     #5A7184;
+  --text-faint:     #93A7B5;
+  --on-dark:        #FFFFFF;
+  --on-dark-muted:  rgba(255, 255, 255, 0.72);
+
+  /* ── Semantic ───────────────────────────────────────────────────────────── */
+  --success:        #1B9C6B;   --success-bg: #E4F6EE;
+  --warning:        #C98A00;   --warning-bg: #FBF1D8;
+  --danger:         #D64545;   --danger-bg:  #FBEAEA;
+  --info-bg:        #E3F4FC;
+
+  /* ── Type & shape ───────────────────────────────────────────────────────── */
+  --font-body:      var(--font-source-sans), system-ui, -apple-system, sans-serif;
+  --font-display:   var(--font-jost), var(--font-source-sans), system-ui, sans-serif;
+  --font-sans:      var(--font-body);
+
+  /* Core six — docs/Font sizes */
+  --text-h1:        48px;
+  --text-h2:        40px;
+  --text-h3:        32px;
+  --text-h4:        28px;
+  --text-h5:        24px;
+  --text-body:      16px;
+  --lh-h1:          1.1;
+  --lh-h2:          1.15;
+  --lh-h3:          1.2;
+  --lh-h4:          1.25;
+  --lh-h5:          1.3;
+  --lh-body:        1.7;
+
+  /* Exceptions */
+  --text-display-xl: 72px;
+  --text-display-l:  60px;
+  --text-h6:         20px;
+  --text-body-lg:    18px;
+  --text-body-sm:    14px;
+  --text-caption:    13px;
+  --text-nav:        15px; /* Navigation — Font design System supporting UI */
+
+  --radius-sm:      6px;
+  --radius:         10px;
+  --radius-lg:      14px;
+  --shadow-card:    0 1px 2px rgba(10, 46, 64, 0.04), 0 1px 3px rgba(10, 46, 64, 0.06);
+  --shadow-pop:     0 12px 32px rgba(10, 46, 64, 0.12);
+}
+
+* { box-sizing: border-box; }
+html { font-size: 16px; }
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-body); /* 16px — core Body */
+  font-weight: 400;
+  line-height: var(--lh-body);
+  background: var(--bg);
+  color: var(--text);
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-h3); /* Zipmater: page <h1> = 32px (H3), not 48 — dense headers */
+  font-weight: 700;
+  line-height: var(--lh-h3);
+  color: var(--text);
+}
+h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-weight: 700;
+  line-height: var(--lh-h2);
+  color: var(--text);
+}
+h3 {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 700;
+  line-height: var(--lh-h3);
+  color: var(--text);
+}
+h4 {
+  font-family: var(--font-display);
+  font-size: var(--text-h4);
+  font-weight: 600;
+  line-height: var(--lh-h4);
+  color: var(--text);
+}
+h5 {
+  font-family: var(--font-display);
+  font-size: var(--text-h5);
+  font-weight: 600;
+  line-height: var(--lh-h5);
+  color: var(--text);
+}
+h6 {
+  font-family: var(--font-display);
+  font-size: var(--text-h6); /* exception */
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.font-display { font-family: var(--font-display); }
+.text-h1 { font-family: var(--font-display); font-size: var(--text-h1); font-weight: 700; line-height: var(--lh-h1); }
+.text-h2 { font-family: var(--font-display); font-size: var(--text-h2); font-weight: 700; line-height: var(--lh-h2); }
+.text-h3 { font-family: var(--font-display); font-size: var(--text-h3); font-weight: 700; line-height: var(--lh-h3); }
+.text-h4 { font-family: var(--font-display); font-size: var(--text-h4); font-weight: 600; line-height: var(--lh-h4); }
+.text-h5 { font-family: var(--font-display); font-size: var(--text-h5); font-weight: 600; line-height: var(--lh-h5); }
+.text-body { font-family: var(--font-body); font-size: var(--text-body); font-weight: 400; line-height: var(--lh-body); }
+.text-body-lg { font-family: var(--font-body); font-size: var(--text-body-lg); font-weight: 400; line-height: 1.7; }
+.text-body-sm { font-family: var(--font-body); font-size: var(--text-body-sm); font-weight: 400; line-height: 1.6; }
+.text-caption { font-family: var(--font-body); font-size: var(--text-caption); font-weight: 400; line-height: 1.5; }
+.text-fine { font-family: var(--font-body); font-size: var(--text-fine); font-weight: 400; line-height: 1.5; }
+.text-display-l { font-family: var(--font-display); font-size: var(--text-display-l); font-weight: 700; line-height: 1.05; }
+.text-display-xl { font-family: var(--font-display); font-size: var(--text-display-xl); font-weight: 700; line-height: 1.0; }
+
+/* ── Animations ───────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--border) 25%, var(--surface) 50%, var(--border) 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(1);   opacity: 0.6; }
+  100% { transform: scale(2.5); opacity: 0;   }
+}
+.gps-pulse { animation: pulse-ring 1.8s ease-out infinite; }
+
+/* ── MapLibre base ────────────────────────────────────────────────────────── */
+.maplibregl-map { font-family: var(--font-sans) !important; }
+
+/* Sidebar: keep scroll if viewport is short, hide the bar */
+.sidebar-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.sidebar-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* ============================================================================
+   COMPONENT LAYER
+   Reusable building blocks. Pages reference these by class name and own NO
+   colors, radii, shadows, or fonts of their own. To restyle a primitive across
+   the whole app, edit it HERE — never in a page.
+   See docs/design-system.md.
+   ============================================================================ */
+@layer components {
+
+  /* ── Page scaffolding ─────────────────────────────────────────────────── */
+  .page-header   { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .page-title    {
+    font-family: var(--font-display);
+    font-size: var(--text-h3); /* 32px — Zipmater page titles (dense UI; not H1 48) */
+    font-weight: 700;
+    line-height: var(--lh-h3);
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .page-subtitle { font-size: var(--text-body-sm); color: var(--text-muted); margin-top: 2px; line-height: 1.6; } /* Small — exception */
+  .overline {
+    font-size: var(--text-caption); font-weight: 500; text-transform: uppercase; /* exception */
+    letter-spacing: 0.08em; color: var(--text-faint); line-height: 1.5;
+  }
+
+  /* ── Card ─────────────────────────────────────────────────────────────── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+  }
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--border);
+  }
+  .card-head-tint {
+    background: var(--primary-soft);
+    color: var(--navy);
+    border-bottom-color: var(--border);
+  }
+  .card-head-tint .card-title { color: var(--navy); font-weight: 600; }
+  .card-head-danger {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border-bottom-color: #FECACA;
+  }
+  .card-head-danger .card-title { color: var(--danger); font-weight: 600; }
+  .card-title { font-size: var(--text-h6); font-weight: 600; color: var(--text); line-height: 1.35; font-family: var(--font-display); } /* Card title = H6 */
+  .card-body  { padding: 20px; }
+
+  /* ── Buttons ──────────────────────────────────────────────────────────── */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: var(--font-sans); font-size: var(--text-body); font-weight: 600; /* Primary button 16/600 */
+    line-height: 1; white-space: nowrap; cursor: pointer;
+    padding: 9px 16px; border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
+  }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: var(--navy); }
+  .btn-navy    { background: var(--navy); color: #fff; }
+  .btn-navy:hover:not(:disabled)    { background: var(--navy-hover); }
+  .btn-outline { background: var(--card); color: var(--navy); border-color: var(--border-strong); }
+  .btn-outline:hover:not(:disabled) { background: var(--surface); }
+  .btn-ghost   { background: transparent; color: var(--text-muted); }
+  .btn-ghost:hover:not(:disabled)   { background: var(--surface); color: var(--text); }
+  .btn-sm { padding: 6px 12px; font-size: var(--text-body-sm); font-weight: 600; } /* Small button 14/600 */
+  .btn-block { width: 100%; }
+
+  /* ── Inline link ──────────────────────────────────────────────────────── */
+  .link { color: var(--primary); font-weight: 500; cursor: pointer; }
+  .link:hover { text-decoration: underline; }
+
+  /* ── Stat tile ────────────────────────────────────────────────────────── */
+  .stat {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow-card); overflow: hidden;
+  }
+  .stat-accent { height: 3px; background: var(--primary); }
+  .stat-body   { padding: 20px; }
+  .stat-label  {
+    font-size: var(--text-caption); font-weight: 500; text-transform: uppercase; /* exception */
+    letter-spacing: 0.07em; color: var(--text-faint); margin-bottom: 8px; line-height: 1.5;
+  }
+  .stat-value  { font-size: var(--text-h3); font-weight: 700; color: var(--text); line-height: var(--lh-h3); font-family: var(--font-display); }
+  .stat-sub    { margin-top: 4px; font-size: var(--text-body-sm); color: var(--text-muted); line-height: 1.6; } /* exception */
+
+  /* ── Badge / status pill ──────────────────────────────────────────────── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: var(--text-caption); font-weight: 500; padding: 3px 9px; border-radius: 999px; /* exception */
+    line-height: 1.5;
+  }
+  .badge-primary { background: var(--primary-soft); color: var(--primary); }
+  .badge-info    { background: var(--info-bg);     color: var(--info); }
+  .badge-success { background: var(--success-bg);  color: var(--success); }
+  .badge-warning { background: var(--warning-bg);  color: var(--warning); }
+  .badge-danger  { background: var(--danger-bg);   color: var(--danger); }
+  .badge-muted   { background: var(--surface);     color: var(--text-muted); }
+
+  /* ── Form controls ────────────────────────────────────────────────────── */
+  .field-label {
+    display: block; font-size: var(--text-body-sm); font-weight: 500; /* exception */
+    color: var(--text-muted); margin-bottom: 6px; line-height: 1.6;
+  }
+  .input, .select, .textarea {
+    width: 100%; font-family: var(--font-sans); font-size: var(--text-body); color: var(--text);
+    background: var(--card); border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm); padding: 9px 12px; outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .input:focus, .select:focus, .textarea:focus {
+    border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 150, 199, 0.12);
+  }
+  .input::placeholder, .textarea::placeholder { color: var(--text-faint); }
+
+  /* Profile / settings — uppercase labels + rounded-xl controls (shipper profile, AddressFields) */
+  .profile-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: var(--text-fine); /* exception */
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .profile-input, .profile-select {
+    width: 100%;
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .profile-select {
+    appearance: none;
+    padding-right: 2.5rem;
+  }
+  .profile-input:focus, .profile-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(0, 150, 199, 0.2);
+  }
+  .profile-input::placeholder { color: var(--text-faint); }
+  .profile-select-wrap { position: relative; }
+
+  /* ── Empty state ──────────────────────────────────────────────────────── */
+  .empty {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; text-align: center; padding: 56px 24px;
+  }
+  .empty-icon {
+    display: flex; align-items: center; justify-content: center;
+    width: 64px; height: 64px; border-radius: 999px;
+    background: var(--surface); margin-bottom: 18px;
+  }
+
+  /* ── Data table ───────────────────────────────────────────────────────── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: var(--text-body-sm); } /* exception */
+  .data-table thead th {
+    text-align: left; font-size: var(--text-caption); font-weight: 500; text-transform: uppercase; /* exception */
+    letter-spacing: 0.06em; color: var(--navy); background: var(--primary-soft);
+    padding: 10px 16px; border-bottom: 1px solid var(--border); white-space: nowrap; line-height: 1.5;
+  }
+  .data-table tbody td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text); }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  .data-table tbody tr:hover { background: var(--surface); }
+
+  /* ── Icon chip (tinted square behind an icon) ─────────────────────────── */
+  .icon-chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 8px;
+    background: var(--primary-soft); color: var(--primary); flex-shrink: 0;
+  }
+
+  /* shadcn-compat utility used by shared form components */
+  .text-destructive { color: var(--danger); }
+}
+
+/* ============================================================================
+   LEGACY BRIDGE — TEMPORARY.
+   Remaps the retired --color-* / --font-* token names onto the new palette so
+   pages not yet migrated keep rendering during the dashboard redesign.
+   DELETE this entire block once every page + component is off the old tokens
+   (final step of the redesign). Nothing new should reference these names.
+   ============================================================================ */
+:root {
+  --color-slate:       var(--navy);
+  --color-slate-80:    #14384B;
+  --color-slate-60:    #1E4356;
+  --color-sage:        #4E7A8C;
+  --color-sage-light:  #8FB4C4;
+  --color-sage-pale:   var(--primary-soft);
+  --color-teal:        var(--primary);
+  --color-teal-light:  var(--info);
+  --color-teal-pale:   var(--primary-soft);
+  --color-teal-dark:   var(--navy);      /* was never defined → broke button hovers (went white) */
+  --color-cream:       var(--bg);
+  --color-cream-dark:  var(--border);
+  --color-white:       var(--card);
+  --color-text:        var(--text);
+  --color-text-muted:  var(--text-muted);
+  --color-text-faint:  var(--text-faint);
+  --color-success:     var(--success);
+  --color-danger:      var(--danger);
+  --color-warning:     var(--warning);
+}
