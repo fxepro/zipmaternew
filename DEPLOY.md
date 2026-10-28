@@ -66,7 +66,7 @@ Browser ──► Netlify (Next.js)  ──/api/* proxy──►  Railway: API (
    | Variable | Value |
    |---|---|
    | `API_PROXY_URL` | `https://<api-domain>.up.railway.app` (https, no trailing slash, no `/api`) |
-   | `NEXT_PUBLIC_APP_HOST` | `app.zipmater.com` |
+   | `NEXT_PUBLIC_APP_HOST` | `zipmater.com` (already set in `netlify.toml`) |
    | `NEXT_PUBLIC_MAPTILER_KEY` | MapTiler key |
    | `NEXT_PUBLIC_STRIPE_PK` | `pk_test_…` until launch |
 

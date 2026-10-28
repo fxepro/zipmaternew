@@ -5,7 +5,7 @@ const COOKIE_TTL  = 300; // 5 min — stale is fine, cosmetic only
 
 // Hosts that are always the "main" Zipmater app — no tenant resolution needed
 function isMainHost(hostname: string): boolean {
-  const appHost = process.env.NEXT_PUBLIC_APP_HOST ?? 'app.zipmater.com';
+  const appHost = process.env.NEXT_PUBLIC_APP_HOST ?? 'zipmater.com';
   return (
     hostname === appHost ||
     hostname === 'localhost' ||

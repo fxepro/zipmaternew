@@ -14,10 +14,12 @@
   # Browser calls same-origin /api/*; app/api/[...path]/route.ts forwards them to
   # Railway at request time using API_PROXY_URL. Not a secret.
   NEXT_PUBLIC_API_PROXY = "true"
+  # The main app domain. middleware.ts treats any other host as a tenant custom
+  # domain and tries to resolve it, so this must match the live domain.
+  NEXT_PUBLIC_APP_HOST = "zipmater.com"
 
 # Set these in Netlify → Site configuration → Environment variables (not here):
 #   API_PROXY_URL              https://<api-service>.up.railway.app   (with https://, no trailing slash, no /api)
-#   NEXT_PUBLIC_APP_HOST       app.zipmater.com
 #   NEXT_PUBLIC_MAPTILER_KEY   MapTiler key
 #   NEXT_PUBLIC_STRIPE_PK      Stripe publishable key (pk_test_… until launch)
 #   NEXT_PUBLIC_REVERB_APP_KEY / NEXT_PUBLIC_REVERB_HOST / NEXT_PUBLIC_REVERB_PORT   (only if Reverb is deployed)

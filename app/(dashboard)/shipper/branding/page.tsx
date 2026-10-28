@@ -178,7 +178,7 @@ export default function BrandingPage() {
     </div>
   );
 
-  const appHost = process.env.NEXT_PUBLIC_APP_HOST ?? 'app.zipmater.com';
+  const appHost = process.env.NEXT_PUBLIC_APP_HOST ?? 'zipmater.com';
 
   return (
     <div className="w-[75%] min-w-[560px] space-y-0">
